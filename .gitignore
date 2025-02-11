@@ -1,3 +1,4 @@
+dataset/
 # Python specific
 __pycache__/
 *.py[cod]
