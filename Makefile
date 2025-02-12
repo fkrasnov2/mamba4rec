@@ -34,14 +34,13 @@ install: .venv .reports .extras
 .ruff:
 	ruff check --fix ${SOURCES} ${TESTS}
 
-# Tests
 .assets:
 	test -d dataset || mkdir dataset
 	test -s dataset/ml-1m.zip  || wget https://files.grouplens.org/datasets/movielens/ml-1m.zip -O dataset/ml-1m.zip
 	test -d dataset/ml-1m  || unzip dataset/ml-1m.zip -d dataset/
 
 .pytest:
-	pytest ${TESTS} --cov=${SOURCES} --cov-report=xml
+	pytest ${TESTS} --cov=${TESTS} --cov-report=xml
 
 .lint: .isort .black .ruff
 lint: .venv .lint
