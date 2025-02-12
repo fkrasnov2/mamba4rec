@@ -17,7 +17,7 @@ SCRIPTS=scripts
 	python3 -m venv .venv
 	. .venv/bin/activate
 .base:
-	pip install -U pip setuptools
+	pip install -U pip setuptools build wheel
 .main:
 	pip install -r requirements.txt
 
@@ -52,6 +52,8 @@ lint: .venv .lint
 .test: .assets .pytest
 test: .test
 
+build: 
+	python -m build .
 
 
 # Cleaning
