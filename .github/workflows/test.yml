@@ -19,8 +19,6 @@ jobs:
       with:
         python-version: '3.x'
     - name: Install build dependencies
-      run: |
-        python -m pip install -U setuptools pip pytest
-        pip install -r requirements.txt
+      run: make install
     - name: Test
       run: make test

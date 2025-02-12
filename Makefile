@@ -16,11 +16,15 @@ SCRIPTS=scripts
 .venv:
 	python3 -m venv .venv
 	. .venv/bin/activate
+.base:
+	pip install -U pip setuptools
+.main:
+	pip install -r requirements.txt
 
 .extras:
-	pip install -U pip setuptools isort black ruff pytest pytest-cov
+	pip install -U isort black ruff pytest pytest-cov
 
-install: .venv .reports .extras
+install: .venv .reports .base .main .extras
 
 
 # Linters
@@ -46,7 +50,7 @@ install: .venv .reports .extras
 lint: .venv .lint
 
 .test: .assets .pytest
-test: .venv .test
+test: .test
 
 
 
