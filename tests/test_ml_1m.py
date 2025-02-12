@@ -12,7 +12,7 @@ class DatasetML1M:
         self._id2user = []
         self._item2id = {}
         self._id2item = {}
-        self._make_leave_k_out()
+        self._train_item_ids, self._val_item_ids = self._make_leave_k_out()
 
     #    def load_users(self):
     #        path_to_user_vocab = self.path_to_dataset + "/" + "users.dat"
@@ -69,6 +69,8 @@ class DatasetML1M:
         assert len(self._id2user) == len(set(self._id2user))
 
         self._item2id = {item: idx for idx, item in enumerate(_items)}
+        self._id2item = list(_items)
+
         train_item_ids = []
         val_item_ids = []
 
@@ -90,15 +92,44 @@ class DatasetML1M:
     @property
     def id2user(self) -> list:
         return self._id2user
+    
+    @property
+    def val_item_ids(self) -> list:
+        return self._val_item_ids
+
+    @property
+    def train_item_ids(self) -> list:
+        return self._train_item_ids
+
+    @property
+    def leave_k_out(self) -> int:
+        return self._leave_k_out
 
 @pytest.fixture
 def dataset_ml_1m():
     return DatasetML1M("dataset/ml-1m", leave_k_out=5)
-
 
 def test_item2id(dataset_ml_1m):
     assert len(dataset_ml_1m.item2id) > 1000
 
 def test_user2id(dataset_ml_1m):
     assert len(dataset_ml_1m.id2user) > 1000
+
+def test_id2item(dataset_ml_1m):
+    assert len(dataset_ml_1m.id2item) > 1000
+
+def test_val_item_ids(dataset_ml_1m):
+    assert len(dataset_ml_1m.val_item_ids) == len(dataset_ml_1m.id2user)
+
+def test_train_item_ids(dataset_ml_1m):
+    assert len(dataset_ml_1m.train_item_ids) == len(dataset_ml_1m.id2user) 
+
+def test_train_item_ids(dataset_ml_1m):
+    assert len(dataset_ml_1m.train_item_ids[512]) >= dataset_ml_1m.leave_k_out
+
+def test_val_item_ids(dataset_ml_1m):
+    assert len(dataset_ml_1m.val_item_ids[512]) == dataset_ml_1m.leave_k_out
+
+
+
 
