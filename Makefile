@@ -15,7 +15,7 @@ SCRIPTS=scripts
 
 .venv:
 	python3 -m venv .venv
-	source .venv/bin/activate
+	. .venv/bin/activate
 
 .extras:
 	pip install -U pip setuptools isort black ruff pytest
