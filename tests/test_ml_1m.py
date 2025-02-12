@@ -1,12 +1,18 @@
 from collections import defaultdict
-
+import  pytest
 
 class DatasetML1M:
-    def __init__(self, path_to_dataset: str, leave_k: int = 5):
+    def __init__(self, path_to_dataset: str, leave_k_out: int = 5):
         self.path_to_dataset = path_to_dataset
+        self._leave_k_out = leave_k_out
         # self.load_users()
         # self.load_items()
-        self.load_interactions()
+        self._interactions  = []
+        self._load_interactions()
+        self._id2user = []
+        self._item2id = {}
+        self._id2item = {}
+        self._make_leave_k_out()
 
     #    def load_users(self):
     #        path_to_user_vocab = self.path_to_dataset + "/" + "users.dat"
@@ -28,7 +34,7 @@ class DatasetML1M:
     #                )
     #            )
 
-    def load_interactions(self):
+    def _load_interactions(self):
         path_to_interactions = self.path_to_dataset + "/" + "ratings.dat"
         with open(path_to_interactions, "r") as fn:
             self._interactions = list(
@@ -38,26 +44,25 @@ class DatasetML1M:
                 )
             )
 
-    def make_leav_k_out(self) -> tuple[list, list]:
+    def _make_leave_k_out(self) -> tuple[list, list]:
         user_interactions = defaultdict(list)
 
-        for user_id, item_id in self._interactions():
+        for user_id, item_id in self._interactions:
             user_interactions[user_id].append(
                 item_id
             )  ## strong: do not check user and items vocabs from dataset
 
-        self._id2user = []
         _items = set()
         train_items: list[list[int]] = []
         val_items: list[list[int]] = []
 
         for user_id, items in user_interactions.items():
-            if len(items) < self.leave_k * 2:
+            if len(items) < self._leave_k_out * 2:
                 continue
 
             self._id2user.append(user_id)
-            val_items.append(items[-self.leave_k :])
-            train_items.append(items[: -self.leave_k])
+            val_items.append(items[-self._leave_k_out :])
+            train_items.append(items[: -self._leave_k_out])
             for it in items:
                 _items.add(it)
 
@@ -74,14 +79,26 @@ class DatasetML1M:
         print(f"{len(train_item_ids)=} {len(val_item_ids)=}")
         return train_item_ids, val_item_ids
 
-        @property
-        def item2id(self) -> dict:
-            return self._item2id
+    @property
+    def item2id(self) -> dict:
+        return self._item2id
 
-        @property
-        def id2item(self) -> dict:
-            return self._id2item
+    @property
+    def id2item(self) -> dict:
+        return self._id2item
 
-        @property
-        def id2user(self) -> list:
-            return self._id2user
+    @property
+    def id2user(self) -> list:
+        return self._id2user
+
+@pytest.fixture
+def dataset_ml_1m():
+    return DatasetML1M("dataset/ml-1m", leave_k_out=5)
+
+
+def test_item2id(dataset_ml_1m):
+    assert len(dataset_ml_1m.item2id) > 1000
+
+def test_user2id(dataset_ml_1m):
+    assert len(dataset_ml_1m.id2user) > 1000
+
