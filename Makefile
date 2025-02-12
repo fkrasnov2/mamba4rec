@@ -18,7 +18,7 @@ SCRIPTS=scripts
 	. .venv/bin/activate
 
 .extras:
-	pip install -U pip setuptools isort black ruff pytest
+	pip install -U pip setuptools isort black ruff pytest pytest-cov
 
 install: .venv .reports .extras
 
