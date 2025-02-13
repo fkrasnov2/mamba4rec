@@ -77,22 +77,3 @@ class Dataset:
         print(f"{len(train_item_ids)=} {len(val_item_ids)=}")
         return train_item_ids, val_item_ids
 
-    @property
-    def item2id(self) -> dict:
-        return self._item2id
-
-    @property
-    def id2item(self) -> dict:
-        return self._id2item
-
-    @property
-    def id2user(self) -> list:
-        return self._id2user
-
-    @property
-    def val_item_ids(self) -> list:
-        return self._val_item_ids
-
-    @property
-    def train_item_ids(self) -> list:
-        return self._train_item_ids
