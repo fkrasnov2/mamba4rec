@@ -1,22 +1,11 @@
 import argparse
 import os
-import random
 
 import boto3
 import dill
-import torch
 from botocore.client import Config
 
 from train import TrainModel, Dataloaders
-
-def seed_everything(seed):
-    random.seed(seed)
-    os.environ["PYTHONHASHSEED"] = str(seed)
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
-    torch.backends.cudnn.deterministic = True
-    torch.backends.cuda.matmul.allow_tf32 = True
 
 def get_s3_client():
     config = Config(signature_version="s3v4")
@@ -49,10 +38,6 @@ if __name__ == "__main__":
         required=True,
         help="Path to S3 object",
     )
-
-    torch.backends.cudnn.deterministic = True
-    torch.backends.cuda.matmul.allow_tf32 = True
-    seed_everything(42)
 
     args = parser.parse_args()
     print(vars(args), flush=True)
