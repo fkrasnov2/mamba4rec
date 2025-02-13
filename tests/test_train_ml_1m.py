@@ -86,14 +86,16 @@ def dataset_ml_1m():
 def test_model_train(dataset_ml_1m):
 
     dl = CreateDataloaders(dataset_ml_1m)
+    assert len(dl._train_dataset) > len (dl._test_dataset)
+
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
     config = MambaConfig(
-        hidden_size=32,
+        hidden_size=8,
         num_hidden_layers=2,
         vocab_size=dl._vocab_size,
-        state_size=8,
-        intermediate_size=8,
+        state_size=4,
+        intermediate_size=4,
         use_mambapy=True,
         use_cache=False,
         pad_token_id=dl._pad_id,
@@ -101,11 +103,13 @@ def test_model_train(dataset_ml_1m):
         eos_token_id=dl._pad_id,  ## SEP
         expand=1,
     )
-    print(config, flush=True)
+    #print(config, flush=True)
     model = MambaForCausalLM(config).to(device)
-           
-    print(model.__class__, model.num_parameters(), "parameters!", flush=True)
-    print(model, flush=True)
+    
+    assert model.num_parameters() > 1000
+
+    #print(model.__class__, model.num_parameters(), "parameters!", flush=True)
+    #print(model, flush=True)
 
     training_args = TrainingArguments(
         output_dir="./results",
@@ -115,9 +119,10 @@ def test_model_train(dataset_ml_1m):
         per_device_eval_batch_size=4,
         num_train_epochs=1,
         weight_decay=0.01,
-        log_level = 'debug',
         use_cpu = True,
         data_seed = 42,
+        seed = 42,
+        disable_tqdm = True
     )
 
     trainer = Trainer(
@@ -128,7 +133,7 @@ def test_model_train(dataset_ml_1m):
         eval_dataset=dl._test_dataset,
     )
         
-    trainer.train()
-    trainer.evaluate()
+    assert trainer.train()
+    assert trainer.evaluate()
 
 
