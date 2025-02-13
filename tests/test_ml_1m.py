@@ -9,29 +9,7 @@ class DatasetML1M (Dataset):
     def __init__(self, path_to_dataset: str, leave_k_out: int = 5):
         self._path_to_dataset = path_to_dataset
         self._leave_k_out = leave_k_out
-        # self.load_users()
-        # self.load_items()
         super().__init__(self._load_interactions(path_to_dataset), leave_k_out)
-
-    #    def load_users(self):
-    #        path_to_user_vocab = self.path_to_dataset + "/" + "users.dat"
-    #        with open(path_to_user_vocab, "r") as fn:
-    #            self.users_vocab = list(
-    #                map(
-    #                    lambda user_str: user_str.split("::").pop(0),
-    #                    fn.read().strip("\n").split("\n"),
-    #                )
-    #            )
-    #
-    #    def load_items(self):
-    #        path_to_item_vocab = self.path_to_dataset + "/" + "movies.dat"
-    #        with open(path_to_items_vocab, "r") as fn:
-    #            self.items_vocab = list(
-    #                map(
-    #                    lambda item_str: item_str.split("::").pop(0),
-    #                    fn.read().strip("\n").split("\n"),
-    #                )
-    #            )
 
     def _load_interactions(self, path_to_dataset) -> Iterable[tuple[int,int]]:
         path_to_interactions = path_to_dataset + "/" + "ratings.dat"
