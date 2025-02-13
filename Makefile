@@ -19,6 +19,7 @@ SCRIPTS=scripts
 .base:
 	pip install -U pip setuptools build wheel
 .main:
+	pip install torch transformers
 	pip install -r requirements.txt
 
 .extras:
