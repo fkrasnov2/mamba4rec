@@ -44,9 +44,7 @@ class Dataset:
         user_interactions = defaultdict(list)
 
         for user_item in self._user_item_interactions_it:
-            user_interactions[user_item[0]].append(
-                user_item[1]
-            )  
+            user_interactions[user_item[0]].append(user_item[1])
 
         _items = set()
         train_items: list[list[int]] = []
@@ -76,4 +74,3 @@ class Dataset:
 
         print(f"{len(train_item_ids)=} {len(val_item_ids)=}")
         return train_item_ids, val_item_ids
-

@@ -39,7 +39,7 @@ class DataCollatorForCLMRec:
         return self.mask_ids_batch(batch_of_ids)
 
 
-class Dataloaders:
+class Datasets:
     def __init__(self, items: set, train_interactions: list, test_interactions: list):
 
         self._item2id = {item: idx for idx, item in enumerate(items)}
@@ -90,7 +90,7 @@ class Dataloaders:
 
 
 class TrainModel:
-    def __init__(self, dl: Dataloaders):
+    def __init__(self, dl: Datasets):
 
         assert len(dl.train_dataset) > len(dl.eval_dataset)
 
@@ -110,13 +110,9 @@ class TrainModel:
             eos_token_id=dl.pad_id,  ## SEP
             expand=1,
         )
-        # print(config, flush=True)
         model = MambaForCausalLM(config).to(device)
 
         assert model.num_parameters() > 1000
-
-        # print(model.__class__, model.num_parameters(), "parameters!", flush=True)
-        # print(model, flush=True)
 
         training_args = TrainingArguments(
             output_dir="./results",
@@ -126,17 +122,15 @@ class TrainModel:
             load_best_model_at_end=True,
             metric_for_best_model="eval_loss",
             learning_rate=2e-5,
-            #per_device_train_batch_size=16,
-            #per_device_eval_batch_size=16,
-            auto_find_batch_size = True,
+            auto_find_batch_size=True,
             num_train_epochs=10,
             weight_decay=0.01,
             use_cpu=False,
             data_seed=42,
             seed=42,
             disable_tqdm=False,
-            full_determinism = True,
-            save_total_limit = 5,
+            full_determinism=True,
+            save_total_limit=5,
         )
 
         trainer = Trainer(
@@ -148,4 +142,4 @@ class TrainModel:
         )
 
         trainer.train()
-
+        trainer.save_model("./saved")
