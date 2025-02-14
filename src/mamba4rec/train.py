@@ -136,6 +136,7 @@ class TrainModel:
             seed=42,
             disable_tqdm=False,
             full_determinism = True,
+            save_total_limit = 5,
         )
 
         trainer = Trainer(
