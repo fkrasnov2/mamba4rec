@@ -71,7 +71,7 @@ if __name__ == "__main__":
 
     train_inference = []
     train_dataloader = DataLoader(
-        ListDataset(data_dict.get("train_interactions", [])),
+            ListDataset(data_dict.get("train_interactions", [])),
         batch_size=args.batch_size,
         collate_fn=DataCollatorForCLMRec(pad_id),
         shuffle=False,
@@ -90,12 +90,4 @@ if __name__ == "__main__":
                 .tolist()
             )
 
-    inferenced_ids = list(
-        map(
-            lambda ids: list(filter(lambda id: id != pad_id, ids)),
-            train_inference,
-        )
-    )
-    print(
-        f'nDCG@{at_k} = {ndcg_score(data_dict.get("test_interactions", []), inferenced_ids):.4f}'
-    )
+    print (f'nDCG@{at_k} = {ndcg_score(data_dict.get("test_interactions", []), train_inference):.4f}')
