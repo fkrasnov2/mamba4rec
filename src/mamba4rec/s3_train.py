@@ -1,6 +1,6 @@
 import argparse
 from train import TrainModel, Datasets
-import s3_tools
+from s3_tools import s3_tools
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -12,8 +12,8 @@ if __name__ == "__main__":
         help="Bucket S3 dataset",
     )
     parser.add_argument(
-        "-kn",
-        "--key_name",
+        "-dkn",
+        "--data_key_name",
         type=str,
         required=True,
         help="Path to S3 object",
@@ -30,7 +30,7 @@ if __name__ == "__main__":
     print(vars(args), flush=True)
 
     s3 = s3_tools()
-    data_dict = s3.get_dill_object(bucket_name=args.bucket_name, key_name=args.key_name)
+    data_dict = s3.get_dill_object(bucket_name=args.bucket_name, key_name=args.data_key_name)
     print(data_dict.keys())
     TrainModel(
         Datasets(
@@ -40,7 +40,7 @@ if __name__ == "__main__":
         )
     )
     s3.safe_upload_folder(
-        folder_name="./saved",
+        folder_name="./saved/*",
         bucket_name=args.bucket_name,
-        object_name=args.model_folder_name,
+        object_name=args.model_folder_name.strip("/")+"/",
     )

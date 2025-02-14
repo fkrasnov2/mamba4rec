@@ -1,11 +1,11 @@
 import argparse
 
-import s3_tools
+from s3_tools import s3_tools
 import torch
 from sklearn.metrics import ndcg_score
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-from train import ListDataset
+from train import ListDataset, DataCollatorForCLMRec
 from transformers import MambaForCausalLM
 from transformers.generation.configuration_utils import GenerationConfig
 
@@ -19,8 +19,8 @@ if __name__ == "__main__":
         help="Bucket S3 dataset",
     )
     parser.add_argument(
-        "-kn",
-        "--key_name",
+        "-dkn",
+        "--data_key_name",
         type=str,
         required=True,
         help="Path to S3 object",
@@ -54,12 +54,14 @@ if __name__ == "__main__":
     print(vars(args), flush=True)
 
     s3 = s3_tools()
-    data_dict = s3.get_dill_object(bucket_name=args.bucket_name, key_name=args.key_name)
+    data_dict = s3.get_dill_object(
+        bucket_name=args.bucket_name, key_name=args.data_key_name
+    )
     print(data_dict.keys())
 
     ##check if exist local folder or get S3
     model = MambaForCausalLM.from_pretrained("./saved/")
-    pad_id = model.config("pad_token_id")
+    pad_id = model.config.pad_token_id
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
     model.to(device)
@@ -77,6 +79,7 @@ if __name__ == "__main__":
     train_dataloader = DataLoader(
         ListDataset(data_dict.get("train_interactions", [])),
         batch_size=args.batch_size,
+        collate_fn=DataCollatorForCLMRec(pad_id),
         shuffle=False,
     )
     with torch.no_grad():
