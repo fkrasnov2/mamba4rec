@@ -34,14 +34,6 @@ if __name__ == "__main__":
         help="Path to S3 object model",
     )
     parser.add_argument(
-        "-topn",
-        "--topn",
-        type=int,
-        required=False,
-        help="TopN recs",
-        default=12,
-    )
-    parser.add_argument(
         "-bs",
         "--batch_size",
         type=int,
@@ -59,6 +51,8 @@ if __name__ == "__main__":
     )
     print(data_dict.keys())
 
+    at_k = len(data_dict.get("test_interactions", [])[0])
+    
     ##check if exist local folder or get S3
     model = MambaForCausalLM.from_pretrained("./saved/")
     pad_id = model.config.pad_token_id
@@ -68,7 +62,7 @@ if __name__ == "__main__":
     model.eval()
 
     gconf = GenerationConfig(
-        max_new_tokens=args.topn,
+        max_new_tokens=at_k,
         num_beams=1,
         do_sample=True,
         pad_token_id=pad_id,
@@ -92,7 +86,7 @@ if __name__ == "__main__":
                     generation_config=gconf,
                 )
                 .detach()
-                .cpu()[:, -args.topn :]
+                .cpu()[:, -at_k :]
                 .tolist()
             )
 
@@ -102,7 +96,6 @@ if __name__ == "__main__":
             train_inference,
         )
     )
-    k = len(data_dict.get("test_interactions", [])[0])
     print(
-        f'nDCG@{k} = {ndcg_score(data_dict.get("test_interactions", []), inferenced_ids):.4f}'
+        f'nDCG@{at_k} = {ndcg_score(data_dict.get("test_interactions", []), inferenced_ids):.4f}'
     )
