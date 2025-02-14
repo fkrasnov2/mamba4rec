@@ -1,11 +1,11 @@
 import argparse
 
-from s3_tools import s3_tools
 import torch
+from s3_tools import s3_tools
 from sklearn.metrics import ndcg_score
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-from train import ListDataset, DataCollatorForCLMRec
+from train import DataCollatorForCLMRec, ListDataset
 from transformers import MambaForCausalLM
 from transformers.generation.configuration_utils import GenerationConfig
 
@@ -52,8 +52,13 @@ if __name__ == "__main__":
     print(data_dict.keys())
 
     at_k = len(data_dict.get("test_interactions", [])[0])
-    
+
     ##check if exist local folder or get S3
+    s3.download_folder(
+        bucket_name=args.bucket_name,
+        object_name=args.model_folder_name,
+        folder_name="./saved/",
+    )
     model = MambaForCausalLM.from_pretrained("./saved/")
     pad_id = model.config.pad_token_id
 
@@ -71,7 +76,7 @@ if __name__ == "__main__":
 
     train_inference = []
     train_dataloader = DataLoader(
-            ListDataset(data_dict.get("train_interactions", [])),
+        ListDataset(data_dict.get("train_interactions", [])),
         batch_size=args.batch_size,
         collate_fn=DataCollatorForCLMRec(pad_id),
         shuffle=False,
@@ -86,8 +91,10 @@ if __name__ == "__main__":
                     generation_config=gconf,
                 )
                 .detach()
-                .cpu()[:, -at_k :]
+                .cpu()[:, -at_k:]
                 .tolist()
             )
 
-    print (f'nDCG@{at_k} = {ndcg_score(data_dict.get("test_interactions", []), train_inference):.4f}')
+    print(
+        f'nDCG@{at_k} = {ndcg_score(data_dict.get("test_interactions", []), train_inference):.4f}'
+    )
