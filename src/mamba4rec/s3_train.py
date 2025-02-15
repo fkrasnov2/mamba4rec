@@ -1,5 +1,5 @@
 import argparse
-from train import TrainModel, Datasets
+from train import TrainModel, Datasets, Vocab
 from s3_tools import s3_tools
 from dill import dumps
 
@@ -34,10 +34,10 @@ if __name__ == "__main__":
     data_dict = s3.get_dill_object(
         bucket_name=args.bucket_name, key_name=args.data_key_name
     )
-
+    vocab = Vocab(data_dict.get("search_texts", set()))
     TrainModel(
+        vocab,
         Datasets(
-            data_dict.get("search_texts", set()),
             data_dict.get("train_interactions", []),
             data_dict.get("test_interactions", []),
         )
