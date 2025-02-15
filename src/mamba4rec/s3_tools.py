@@ -83,7 +83,7 @@ class s3_tools:
             os.mkdir(folder_name)
 
         for key in self.s3_client.list_objects(Bucket=bucket_name)["Contents"]:
-            if key.startswith(object_name):
+            if key["Key"].startswith(object_name):
                 print(key["Key"])
                 self.s3_client.download_file(
                     Bucket=bucket_name,
