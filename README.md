@@ -6,7 +6,7 @@
 
 ## Framework
 
-[![Framework](https://github.com/fkrasnov2/mamba4rec/blob/main/mamba4recv3.png)](https://github.com/fkrasnov2/mamba4rec)
+[![Framework](https://github.com/fkrasnov2/mamba4rec/raw/main/mamba4recv3.png)](https://github.com/fkrasnov2/mamba4rec)
 
 ## Getting Started
 bash:
