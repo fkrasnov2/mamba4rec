@@ -13,10 +13,11 @@ bash:
 ```console
 git clone https://github.com/fkrasnov2/mamba4rec.git
 cd mamba4rec
+#to test in isolated env
 make install test
 ```
-## Production
+## Production ready
+```bash
 pip install mamba4rec
-
 ```
 
