@@ -1,11 +1,11 @@
 import argparse
 
 import torch
-from s3_tools import s3_tools
+from mamba4rec.s3_tools import s3_tools
 from sklearn.metrics import ndcg_score
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-from train import DataCollatorForCLMRec, ListDataset
+from mamba4rec.train import DataCollatorForCLMRec, ListDataset
 from transformers import MambaForCausalLM
 from transformers.generation.configuration_utils import GenerationConfig
 

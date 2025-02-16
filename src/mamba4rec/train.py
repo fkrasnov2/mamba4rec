@@ -140,6 +140,7 @@ class TrainModel:
             disable_tqdm=False,
             full_determinism=True,
             save_total_limit=5,
+            save_safetensors=False,
         )
 
         trainer = Trainer(
