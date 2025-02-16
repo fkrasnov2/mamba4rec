@@ -1,5 +1,5 @@
 # mamba4rec
-Mamba model for recommendation of  search suggests
+[![Mamba]()](https://huggingface.co/docs/transformers/main/model_doc/mamba) model for recommendation of  search suggests
 
 [![Python version](https://img.shields.io/badge/Python-%3E=3.10-blue)](https://github.com/fkrasnov2/mamba4rec)
 
@@ -16,7 +16,7 @@ cd mamba4rec
 make install test
 ```
 ## Production
-pip install fastEASE
+pip install mamba4rec
 
 ```
 
