@@ -52,11 +52,5 @@ if __name__ == "__main__":
     s3.s3_client.put_object(
         Bucket=args.bucket_name,
         Key=args.model_folder_name.strip("/") + "/" + "vocab.obj",
-        Body=dumps(
-            {
-                key: value
-                for key, value in data_dict.items()
-                if "interactions" not in key
-            }
-        ),
+        Body=dumps(vocab) 
     )
