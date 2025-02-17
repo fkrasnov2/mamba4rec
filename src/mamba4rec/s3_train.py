@@ -1,5 +1,6 @@
 import argparse
-from train import TrainModel, Datasets, Vocab
+import mamba4rec
+from mamba4rec import TrainModel, Datasets
 from s3_tools import s3_tools
 from dill import dumps
 
@@ -34,23 +35,20 @@ if __name__ == "__main__":
     data_dict = s3.get_dill_object(
         bucket_name=args.bucket_name, key_name=args.data_key_name
     )
-    vocab = Vocab(data_dict.get("search_texts", set()))
+    vocab = mamba4rec.Vocab(data_dict.get("search_texts", set()))
     TrainModel(
         vocab,
         Datasets(
             data_dict.get("train_interactions", []),
             data_dict.get("test_interactions", []),
-        )
+        ),
     )
+
+    with open("./saved/vocab.obj", "wb") as fn:
+        fn.write(dumps(vocab))
 
     s3.safe_upload_folder(
         folder_name="./saved/*",
         bucket_name=args.bucket_name,
         object_name=args.model_folder_name.strip("/") + "/",
-    )
-
-    s3.s3_client.put_object(
-        Bucket=args.bucket_name,
-        Key=args.model_folder_name.strip("/") + "/" + "vocab.obj",
-        Body=dumps(vocab) 
     )
