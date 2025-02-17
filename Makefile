@@ -54,7 +54,7 @@ lint: .venv .lint
 test: .test
 
 build: 
-	rm dist/*
+	rm -f dist/*
 	python -m build .
 	twine upload dist/mamba4rec*
 
