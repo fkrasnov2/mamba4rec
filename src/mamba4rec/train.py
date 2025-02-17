@@ -41,10 +41,12 @@ class DataCollatorForCLMRec:
 
 class Vocab:
     def __init__(self, items: set):
-
         self._item2id = {item: idx for idx, item in enumerate(items)}
         self._item2id[self.pad_str] = len(self._item2id)
         self._item2id[self.unk_str] = len(self._item2id)
+
+    def __getitem__(self, idx):
+        return self.list(self._item2id.keys())[idx]
 
     @property
     def vocab_size(self) -> int:
