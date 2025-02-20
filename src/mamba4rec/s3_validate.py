@@ -83,7 +83,6 @@ if __name__ == "__main__":
     )
     with torch.no_grad():
         for batch in tqdm(train_dataloader):
-
             train_inference += (
                 model.generate(
                     batch["input_ids"].to(device),

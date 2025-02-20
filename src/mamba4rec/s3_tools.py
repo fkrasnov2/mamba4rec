@@ -66,7 +66,7 @@ class s3_tools:
         if self.check_exists(bucket_name, object_name):
             object_name = object_name.strip("/") + str(int(time.perf_counter())) + "/"
         print(f"{object_name=}")
-        #self.s3_client.put_object(Bucket=bucket_name, Key=object_name)
+        # self.s3_client.put_object(Bucket=bucket_name, Key=object_name)
         results = []
         for file_name in glob(folder_name):
             res = self.upload_file(

@@ -23,7 +23,6 @@ class DataCollatorForCLMRec:
         self.pad_id = pad_id
 
     def mask_ids_batch(self, batch_of_ids):
-
         padded_ids = pad_sequence(
             list(map(lambda ids: torch.LongTensor(ids[::-1]), batch_of_ids)),
             batch_first=True,
@@ -40,13 +39,25 @@ class DataCollatorForCLMRec:
 
 
 class Vocab:
-    def __init__(self, items: set):
-        self._item2id = {item: idx for idx, item in enumerate(items)}
+    def __init__(self, vocab_raw: dict):
+        """
+        vocab_raw is item's data structure a dict of tuples (id, search_text_raw) with key search_text (which is normed form of search_text_raw)
+        The goal of Vocab class is to extend vocab_raw with [PAD] and [UNK]
+        """
+        self._item2id = {item: raw_tuple[0] for item, raw_tuple in vocab_raw.items()}
         self._item2id[self.pad_str] = len(self._item2id)
         self._item2id[self.unk_str] = len(self._item2id)
+        self._id2item = {idx: item for item, idx in self._item2id.items()}
+        self._item2raw_item = {
+            item: raw_tuple[1] for item, raw_tuple in vocab_raw.items()
+        }
+
+    @property
+    def item2raw_item(self, item) -> str:
+        return self._item2raw_item.get(item, self.unk_str)
 
     def __getitem__(self, idx):
-        return self.list(self._item2id.keys())[idx]
+        return self._id2item.get(idx)
 
     @property
     def vocab_size(self) -> int:
@@ -54,7 +65,7 @@ class Vocab:
 
     @property
     def id2item(self) -> dict:
-        return list(self._item2id.keys())
+        return self._id2item
 
     @property
     def item2id(self) -> dict:
@@ -79,7 +90,6 @@ class Vocab:
 
 class Datasets:
     def __init__(self, train_interactions: list, test_interactions: list):
-
         X_train, X_test, self._val_train, self._val_test = train_test_split(
             train_interactions,
             test_interactions,
@@ -101,7 +111,6 @@ class Datasets:
 
 class TrainModel:
     def __init__(self, vocab: Vocab, dl: Datasets):
-
         assert len(dl.train_dataset) > len(dl.eval_dataset)
 
         device = "cuda" if torch.cuda.is_available() else "cpu"

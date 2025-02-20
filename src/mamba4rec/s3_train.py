@@ -35,7 +35,7 @@ if __name__ == "__main__":
     data_dict = s3.get_dill_object(
         bucket_name=args.bucket_name, key_name=args.data_key_name
     )
-    vocab = mamba4rec.Vocab(data_dict.get("search_texts", set()))
+    vocab = mamba4rec.Vocab(data_dict.get("search_texts", {}))
     TrainModel(
         vocab,
         Datasets(
