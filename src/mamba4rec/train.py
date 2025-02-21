@@ -52,11 +52,13 @@ class Vocab:
             item: raw_tuple[1] for item, raw_tuple in vocab_raw.items()
         }
 
-    @property
-    def item2raw_item(self, item) -> str:
+    def item_id_to_raw_item(self, item_id : int) -> str:
+        return self.item2raw_item(self._id2item[item_id])
+
+    def item2raw_item(self, item : str) -> str:
         return self._item2raw_item.get(item, self.unk_str)
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx : int) -> str:
         return self._id2item.get(idx)
 
     @property
