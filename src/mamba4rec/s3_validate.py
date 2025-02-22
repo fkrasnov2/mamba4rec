@@ -9,6 +9,14 @@ from mamba4rec.train import DataCollatorForCLMRec, ListDataset
 from transformers import MambaForCausalLM
 from transformers.generation.configuration_utils import GenerationConfig
 
+
+def list_flatter(list2d: list[list]) -> set:
+    res = set()
+    for lst in list2d:
+        res.update(lst)
+    return res
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -94,6 +102,14 @@ if __name__ == "__main__":
                 .tolist()
             )
 
+    test_vocab_size = len(list_flatter(data_dict.get("test_interactions")))
+    inference_vocab_size = len(list_flatter(train_inference))
+    train_vocab_size = len(list_flatter(data_dict.get("train_interactions")))
+
     print(
-        f'nDCG@{at_k} = {ndcg_score(data_dict.get("test_interactions", []), train_inference):.4f}'
+        f"{train_vocab_size=} {test_vocab_size=} {inference_vocab_size=} ratio: {inference_vocab_size * 1.0 / test_vocab_size:.4f}"
+    )
+
+    print(
+        f"nDCG@{at_k} = {ndcg_score(data_dict.get('test_interactions', []), train_inference):.4f}"
     )
