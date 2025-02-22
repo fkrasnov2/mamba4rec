@@ -1,8 +1,8 @@
 import argparse
+
 import mamba4rec
-from mamba4rec import TrainModel, Datasets
+from mamba4rec import Datasets, TrainModel
 from s3_tools import s3_tools
-from dill import dumps
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -45,13 +45,7 @@ if __name__ == "__main__":
     )
 
     model_trainer.train()
-    model_trainer.save_model("./saved")
-
-    with open("./saved/vocab.obj", "wb") as fn:
-        fn.write(dumps(vocab))
-
-    if args.validate :
-        
+    model_trainer.save("./saved")
 
     s3.safe_upload_folder(
         folder_name="./saved/*",
