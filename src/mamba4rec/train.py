@@ -1,11 +1,19 @@
+import json
+
+import dill
 import torch
+from sklearn.metrics import ndcg_score
 from sklearn.model_selection import train_test_split
 from torch.nn.utils.rnn import pad_sequence
-from transformers import MambaConfig, MambaForCausalLM, Trainer, TrainingArguments
+from torch.utils.data import DataLoader
+from tqdm import tqdm
+from transformers import (MambaConfig, MambaForCausalLM, Trainer,
+                          TrainingArguments)
+from transformers.generation.configuration_utils import GenerationConfig
 
 
 class ListDataset(torch.utils.data.Dataset):
-    def __init__(self, data: list):
+    def __init__(self, data: list[list]):
         self.data = data
 
     def __len__(self):
@@ -16,6 +24,12 @@ class ListDataset(torch.utils.data.Dataset):
 
     def __getitems__(self, idx_list):
         return [self.data[_] for _ in idx_list]
+
+    def distinct_size(self) -> int:
+        res = set()
+        for lst in self.data:
+            res.update(lst)
+        return len(res)
 
 
 class DataCollatorForCLMRec:
@@ -52,13 +66,13 @@ class Vocab:
             item: raw_tuple[1] for item, raw_tuple in vocab_raw.items()
         }
 
-    def item_id_to_raw_item(self, item_id : int) -> str:
+    def item_id_to_raw_item(self, item_id: int) -> str:
         return self.item2raw_item(self._id2item[item_id])
 
-    def item2raw_item(self, item : str) -> str:
+    def item2raw_item(self, item: str) -> str:
         return self._item2raw_item.get(item, self.unk_str)
 
-    def __getitem__(self, idx : int) -> str:
+    def __getitem__(self, idx: int) -> str:
         return self._id2item.get(idx)
 
     @property
@@ -91,10 +105,15 @@ class Vocab:
 
 
 class Datasets:
-    def __init__(self, train_interactions: list, test_interactions: list):
-        X_train, X_test, self._val_train, self._val_test = train_test_split(
+    def __init__(self, train_interactions: list[list], test_interactions: list[list]):
+        self._train_interactions = train_interactions
+        self._test_interactions = test_interactions
+
+        (
+            X_train,
+            X_test,
+        ) = train_test_split(
             train_interactions,
-            test_interactions,
             test_size=0.05,
             random_state=42,
         )
@@ -112,29 +131,32 @@ class Datasets:
 
 
 class TrainModel:
-    def __init__(self, vocab: Vocab, dl: Datasets):
-        assert len(dl.train_dataset) > len(dl.eval_dataset)
+    def __init__(self, vocab: Vocab, datasets: Datasets):
+        self._vocab = vocab
+        self._datasets = datasets
+        self._device = "cuda" if torch.cuda.is_available() else "cpu"
+        self._metrics = {}
 
-        device = "cuda" if torch.cuda.is_available() else "cpu"
-
+    def create_model(self):
         # -hs 128 -ss 16 -is 64 -hl 8
         config = MambaConfig(
             hidden_size=32,
             num_hidden_layers=8,
-            vocab_size=vocab.vocab_size,
+            vocab_size=self._vocab.vocab_size,
             state_size=8,
             intermediate_size=32,
             use_mambapy=True,
             use_cache=False,
-            pad_token_id=vocab.pad_id,
-            bos_token_id=vocab.pad_id,  ## CLS
-            eos_token_id=vocab.pad_id,  ## SEP
+            pad_token_id=self._vocab.pad_id,
+            bos_token_id=self._vocab.pad_id,  ## CLS
+            eos_token_id=self._vocab.pad_id,  ## SEP
             expand=1,
         )
-        model = MambaForCausalLM(config).to(device)
+        self._model = MambaForCausalLM(config).to(self._device)
 
-        assert model.num_parameters() > 1000
+        assert self._model.num_parameters() > 1000
 
+    def create_trainer(self):
         training_args = TrainingArguments(
             output_dir="./results",
             eval_strategy="steps",
@@ -156,13 +178,84 @@ class TrainModel:
             save_safetensors=False,
         )
 
-        trainer = Trainer(
-            model=model,
+        self._trainer = Trainer(
+            model=self._model,
             args=training_args,
-            data_collator=DataCollatorForCLMRec(vocab.pad_id),
-            train_dataset=dl.train_dataset,
-            eval_dataset=dl.eval_dataset,
+            data_collator=DataCollatorForCLMRec(self._vocab.pad_id),
+            train_dataset=self._datasets.train_dataset,
+            eval_dataset=self._datasets.eval_dataset,
         )
 
-        trainer.train()
-        trainer.save_model("./saved")
+    def generate(
+        self, max_new_tokens: int, dataset: ListDataset, batch_size: int
+    ) -> tuple(ListDataset, int, float):
+        self._gconf = GenerationConfig(
+            max_new_tokens=max_new_tokens,
+            num_beams=6,
+            do_sample=True,
+            pad_token_id=self._model.config.pad_id,
+            early_stopping="never",
+        )
+
+        inference = []
+        dataloader = DataLoader(
+            dataset,
+            batch_size=batch_size,
+            collate_fn=DataCollatorForCLMRec(self._model.config.pad_id),
+            shuffle=False,
+        )
+        with torch.no_grad():
+            for batch in tqdm(dataloader):
+                inference += (
+                    self._model.generate(
+                        batch["input_ids"].to(self._device),
+                        attention_mask=batch["attention_mask"].to(self._device),
+                        generation_config=self._gconf,
+                    )
+                    .detach()
+                    .cpu()[:, -max_new_tokens:]
+                    .tolist()
+                )
+
+        self._inference_dataset = ListDataset(inference)
+        self._metrics["distinct_inference_size"] = (
+            self._inference_dataset.distinct_size()
+        )
+        self._metrics["diversity_ratio"] = (
+            1.0 * self._metrics["distinct_inference_size"] / dataset.distinct_size()
+        )
+
+        return (
+            self._inference_dataset,
+            self._metrics["distinct_inference_size"],
+            self._metric["diversity_ratio"],
+        )
+
+    def ndcg(self, at_k: int) -> float:
+        score = 1 * (
+            torch.tensor(self._datasets._test_interactions, dtype=torch.float32)
+            == torch.tensor(self._inference_dataset.data, dtype=torch.float32)
+        )
+        y_score = score.clone()
+        score.sort(dim=1)
+        y_true = torch.fliplr(score)
+        self._metrics[f"ndcg@{at_k}"] = ndcg_score(
+            y_true.numpy(), y_score.numpy(), k=at_k
+        ).item()
+        return self._metrics[f"ndcg@{at_k}"]
+
+    def save(self, path: str = "./saved"):
+        self._trainer.save_model(path)
+        self._gconf.save_pretrained(path)
+
+        with open(path + "/inference.obj", "rb") as fn:
+            dill.dump(self._inference_dataset.data, fn)
+
+        with open(path + "/vocab.obj", "rb") as fn:
+            dill.dump(self._vocab, fn)
+
+        with open(path + "/datasets.obj", "rb") as fn:
+            dill.dump(self._datasets, fn)
+
+        with open(path + "/metrics.json", "w") as fn:
+            fn.write(json.dumps(self._metrics))

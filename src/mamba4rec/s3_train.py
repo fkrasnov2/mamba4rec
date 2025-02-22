@@ -36,7 +36,7 @@ if __name__ == "__main__":
         bucket_name=args.bucket_name, key_name=args.data_key_name
     )
     vocab = mamba4rec.Vocab(data_dict.get("search_texts", {}))
-    TrainModel(
+    model_trainer = TrainModel(
         vocab,
         Datasets(
             data_dict.get("train_interactions", []),
@@ -44,8 +44,14 @@ if __name__ == "__main__":
         ),
     )
 
+    model_trainer.train()
+    model_trainer.save_model("./saved")
+
     with open("./saved/vocab.obj", "wb") as fn:
         fn.write(dumps(vocab))
+
+    if args.validate :
+        
 
     s3.safe_upload_folder(
         folder_name="./saved/*",
