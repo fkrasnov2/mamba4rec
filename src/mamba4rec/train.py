@@ -7,8 +7,7 @@ from sklearn.model_selection import train_test_split
 from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-from transformers import (MambaConfig, MambaForCausalLM, Trainer,
-                          TrainingArguments)
+from transformers import MambaConfig, MambaForCausalLM, Trainer, TrainingArguments
 from transformers.generation.configuration_utils import GenerationConfig
 
 
@@ -137,7 +136,10 @@ class TrainModel:
         self._device = "cuda" if torch.cuda.is_available() else "cpu"
         self._metrics = {}
 
-    def create_model(self):
+        self._create_model()
+        self._create_trainer()
+
+    def _create_model(self):
         # -hs 128 -ss 16 -is 64 -hl 8
         config = MambaConfig(
             hidden_size=32,
@@ -156,7 +158,7 @@ class TrainModel:
 
         assert self._model.num_parameters() > 1000
 
-    def create_trainer(self):
+    def _create_trainer(self):
         training_args = TrainingArguments(
             output_dir="./results",
             eval_strategy="steps",
@@ -165,8 +167,8 @@ class TrainModel:
             load_best_model_at_end=True,
             metric_for_best_model="eval_loss",
             learning_rate=2e-5,
-            per_device_train_batch_size=1024,
-            per_device_eval_batch_size=1024,
+            per_device_train_batch_size=256,
+            per_device_eval_batch_size=256,
             num_train_epochs=10,
             weight_decay=0.01,
             use_cpu=False,
@@ -186,9 +188,17 @@ class TrainModel:
             eval_dataset=self._datasets.eval_dataset,
         )
 
+        self._trainer.train()
+
     def generate(
-        self, max_new_tokens: int, dataset: ListDataset, batch_size: int
+        self, max_new_tokens: int, dataset: ListDataset, batch_size: int = 256
     ) -> tuple(ListDataset, int, float):
+        if dataset is None:
+            dataset = ListDataset(self._datasets._test_interactions)
+            if max_new_tokens in None:
+                max_new_tokens = len(dataset.data[0])
+        self._at_k = max_new_tokens
+
         self._gconf = GenerationConfig(
             max_new_tokens=max_new_tokens,
             num_beams=6,
@@ -232,6 +242,9 @@ class TrainModel:
         )
 
     def ndcg(self, at_k: int) -> float:
+        if at_k is None:
+            at_k = self._at_k
+
         score = 1 * (
             torch.tensor(self._datasets._test_interactions, dtype=torch.float32)
             == torch.tensor(self._inference_dataset.data, dtype=torch.float32)

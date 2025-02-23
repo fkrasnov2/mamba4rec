@@ -36,16 +36,17 @@ if __name__ == "__main__":
         bucket_name=args.bucket_name, key_name=args.data_key_name
     )
     vocab = mamba4rec.Vocab(data_dict.get("search_texts", {}))
-    model_trainer = TrainModel(
-        vocab,
-        Datasets(
-            data_dict.get("train_interactions", []),
-            data_dict.get("test_interactions", []),
-        ),
+    datasets = Datasets(
+        data_dict.get("train_interactions", []),
+        data_dict.get("test_interactions", []),
     )
+    model_trainer = TrainModel(vocab, datasets)
 
-    model_trainer.train()
+    model_trainer.generate()
+    model_trainer.ndcg()
     model_trainer.save("./saved")
+
+    print(model_trainer._metrics)
 
     s3.safe_upload_folder(
         folder_name="./saved/*",
