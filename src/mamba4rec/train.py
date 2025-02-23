@@ -261,13 +261,13 @@ class TrainModel:
         self._trainer.save_model(path)
         self._gconf.save_pretrained(path)
 
-        with open(path + "/inference.obj", "rb") as fn:
+        with open(path + "/inference.obj", "wb") as fn:
             dill.dump(self._inference_dataset.data, fn)
 
-        with open(path + "/vocab.obj", "rb") as fn:
+        with open(path + "/vocab.obj", "wb") as fn:
             dill.dump(self._vocab, fn)
 
-        with open(path + "/datasets.obj", "rb") as fn:
+        with open(path + "/datasets.obj", "wb") as fn:
             dill.dump(self._datasets, fn)
 
         with open(path + "/metrics.json", "w") as fn:
