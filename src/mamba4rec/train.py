@@ -192,7 +192,7 @@ class TrainModel:
 
     def generate(
         self, max_new_tokens: int, dataset: ListDataset, batch_size: int = 256
-    ) -> tuple(ListDataset, int, float):
+    ) -> tuple[ListDataset, int, float]:
         if dataset is None:
             dataset = ListDataset(self._datasets._test_interactions)
             if max_new_tokens in None:
