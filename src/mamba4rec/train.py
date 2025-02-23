@@ -191,7 +191,7 @@ class TrainModel:
         self._trainer.train()
 
     def generate(
-        self, max_new_tokens: int, dataset: ListDataset, batch_size: int = 256
+            self, max_new_tokens: int = None, dataset: ListDataset = None, batch_size: int = 256
     ) -> tuple[ListDataset, int, float]:
         if dataset is None:
             dataset = ListDataset(self._datasets._test_interactions)
@@ -241,7 +241,7 @@ class TrainModel:
             self._metric["diversity_ratio"],
         )
 
-    def ndcg(self, at_k: int) -> float:
+    def ndcg(self, at_k: int = None) -> float:
         if at_k is None:
             at_k = self._at_k
 
