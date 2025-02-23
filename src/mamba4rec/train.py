@@ -169,7 +169,7 @@ class TrainModel:
             learning_rate=2e-5,
             per_device_train_batch_size=512,
             per_device_eval_batch_size=256,
-            num_train_epochs=30,
+            num_train_epochs=33,
             weight_decay=0.01,
             use_cpu=False,
             data_seed=42,
@@ -204,7 +204,7 @@ class TrainModel:
             max_new_tokens=max_new_tokens,
             num_beams=6,
             do_sample=True,
-            pad_token_id=self._model.config.pad_id,
+            pad_token_id=self._vocab.pad_id,
             early_stopping="never",
         )
 
@@ -212,7 +212,7 @@ class TrainModel:
         dataloader = DataLoader(
             dataset,
             batch_size=batch_size,
-            collate_fn=DataCollatorForCLMRec(self._model.config.pad_id),
+            collate_fn=DataCollatorForCLMRec(self._vocab.pad_id),
             shuffle=False,
         )
         with torch.no_grad():
