@@ -134,7 +134,7 @@ class TrainModel:
         self._vocab = vocab
         self._datasets = datasets
         self._device = "cuda" if torch.cuda.is_available() else "cpu"
-        self._metrics = {}
+        self._metrics : dict[str, str] = {}
 
         self._create_model()
         self._create_trainer()
@@ -191,7 +191,7 @@ class TrainModel:
         self._trainer.train(resume_from_checkpoint = True)
 
     def generate(
-            self, max_new_tokens: int = None, dataset: ListDataset = None, batch_size: int = 256
+            self, max_new_tokens = None, dataset = None, batch_size: int = 256
     ) -> tuple[ListDataset, int, float]:
         if dataset is None:
             dataset = ListDataset(self._datasets._test_interactions)
@@ -241,7 +241,7 @@ class TrainModel:
             self._metrics["diversity_ratio"],
         )
 
-    def ndcg(self, at_k: int = None) -> float:
+    def ndcg(self, at_k = None) -> float:
         if at_k is None:
             at_k = self._at_k
 

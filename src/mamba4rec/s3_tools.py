@@ -55,7 +55,7 @@ class s3_tools:
             if e.response["Error"]["Code"] == "404":
                 # The key does not exist.
                 return False
-            return True
+        return True
 
     def safe_upload_folder(
         self, folder_name: str, bucket_name: str, object_name=None
