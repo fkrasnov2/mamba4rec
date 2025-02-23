@@ -169,16 +169,15 @@ class TrainModel:
             learning_rate=2e-5,
             per_device_train_batch_size=512,
             per_device_eval_batch_size=256,
-            num_train_epochs=33,
+            num_train_epochs=15,
             weight_decay=0.01,
             use_cpu=False,
             data_seed=42,
             seed=42,
             disable_tqdm=False,
             full_determinism=True,
-            save_total_limit=5,
+            save_total_limit=11,
             save_safetensors=False,
-            resume_from_checkpoint = True
         )
 
         self._trainer = Trainer(
@@ -189,7 +188,7 @@ class TrainModel:
             eval_dataset=self._datasets.eval_dataset,
         )
 
-        self._trainer.train()
+        self._trainer.train(resume_from_checkpoint = True)
 
     def generate(
             self, max_new_tokens: int = None, dataset: ListDataset = None, batch_size: int = 256
@@ -239,7 +238,7 @@ class TrainModel:
         return (
             self._inference_dataset,
             self._metrics["distinct_inference_size"],
-            self._metric["diversity_ratio"],
+            self._metrics["diversity_ratio"],
         )
 
     def ndcg(self, at_k: int = None) -> float:
