@@ -167,9 +167,9 @@ class TrainModel:
             load_best_model_at_end=True,
             metric_for_best_model="eval_loss",
             learning_rate=2e-5,
-            per_device_train_batch_size=256,
+            per_device_train_batch_size=512,
             per_device_eval_batch_size=256,
-            num_train_epochs=10,
+            num_train_epochs=30,
             weight_decay=0.01,
             use_cpu=False,
             data_seed=42,
@@ -178,6 +178,7 @@ class TrainModel:
             full_determinism=True,
             save_total_limit=5,
             save_safetensors=False,
+            resume_from_checkpoint = True
         )
 
         self._trainer = Trainer(
@@ -195,7 +196,7 @@ class TrainModel:
     ) -> tuple[ListDataset, int, float]:
         if dataset is None:
             dataset = ListDataset(self._datasets._test_interactions)
-            if max_new_tokens in None:
+            if max_new_tokens is None:
                 max_new_tokens = len(dataset.data[0])
         self._at_k = max_new_tokens
 
