@@ -188,7 +188,7 @@ class TrainModel:
             eval_dataset=self._datasets.eval_dataset,
         )
 
-        self._trainer.train(resume_from_checkpoint = True)
+        self._trainer.train()
 
     def generate(
             self, max_new_tokens = None, dataset = None, batch_size: int = 256
