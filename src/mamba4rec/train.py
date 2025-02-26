@@ -231,14 +231,14 @@ class TrainModel:
         self._metrics["distinct_inference_size"] = (
             self._inference_dataset.distinct_size()
         )
-        self._metrics["diversity_ratio"] = (
+        self._metrics["cover_ratio"] = (
             1.0 * self._metrics["distinct_inference_size"] / dataset.distinct_size()
         )
 
         return (
             self._inference_dataset,
             self._metrics["distinct_inference_size"],
-            self._metrics["diversity_ratio"],
+            self._metrics["cover_ratio"],
         )
 
     def ndcg(self, at_k = None) -> float:
