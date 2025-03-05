@@ -161,7 +161,7 @@ class TrainModel:
     def _create_trainer(self):
         training_args = TrainingArguments(
             output_dir="./results",
-            eval_strategy="steps",
+            eval_strategy="epoch",
             prediction_loss_only=True,
             save_strategy="best",
             load_best_model_at_end=True,
