@@ -167,9 +167,9 @@ class TrainModel:
             load_best_model_at_end=True,
             metric_for_best_model="eval_loss",
             learning_rate=2e-5,
-            per_device_train_batch_size=512,
-            per_device_eval_batch_size=256,
-            num_train_epochs=15,
+            per_device_train_batch_size=128,
+            per_device_eval_batch_size=64,
+            num_train_epochs=5,
             weight_decay=0.01,
             use_cpu=False,
             data_seed=42,
@@ -201,10 +201,11 @@ class TrainModel:
 
         self._gconf = GenerationConfig(
             max_new_tokens=max_new_tokens,
-            num_beams=6,
+            num_beams=4,
             do_sample=True,
             pad_token_id=self._vocab.pad_id,
             early_stopping="never",
+            bad_words_ids=[[self._vocab.pad_id, self._vocab.unk_id,]],
         )
 
         inference = []
@@ -223,7 +224,7 @@ class TrainModel:
                         generation_config=self._gconf,
                     )
                     .detach()
-                    .cpu()[:, -max_new_tokens:]
+                    .cpu()
                     .tolist()
                 )
 
