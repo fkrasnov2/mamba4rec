@@ -1,13 +1,15 @@
 import json
 
 import dill
+import numpy as np
 import torch
 from sklearn.metrics import ndcg_score
 from sklearn.model_selection import train_test_split
 from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-from transformers import MambaConfig, MambaForCausalLM, Trainer, TrainingArguments
+from transformers import (MambaConfig, MambaForCausalLM, Trainer,
+                          TrainingArguments)
 from transformers.generation.configuration_utils import GenerationConfig
 
 
@@ -134,7 +136,7 @@ class TrainModel:
         self._vocab = vocab
         self._datasets = datasets
         self._device = "cuda" if torch.cuda.is_available() else "cpu"
-        self._metrics : dict[str, str] = {}
+        self._metrics: dict[str, str] = {}
 
         self._create_model()
         self._create_trainer()
@@ -167,7 +169,7 @@ class TrainModel:
             load_best_model_at_end=True,
             metric_for_best_model="eval_loss",
             learning_rate=2e-5,
-            per_device_train_batch_size=128,
+            per_device_train_batch_size=256,
             per_device_eval_batch_size=64,
             num_train_epochs=5,
             weight_decay=0.01,
@@ -191,7 +193,7 @@ class TrainModel:
         self._trainer.train()
 
     def generate(
-            self, max_new_tokens = None, dataset = None, batch_size: int = 256
+        self, max_new_tokens=None, dataset=None, batch_size: int = 512
     ) -> tuple[ListDataset, int, float]:
         if dataset is None:
             dataset = ListDataset(self._datasets._test_interactions)
@@ -205,7 +207,12 @@ class TrainModel:
             do_sample=True,
             pad_token_id=self._vocab.pad_id,
             early_stopping="never",
-            bad_words_ids=[[self._vocab.pad_id, self._vocab.unk_id,]],
+            bad_words_ids=[
+                [
+                    self._vocab.pad_id,
+                    self._vocab.unk_id,
+                ]
+            ],
         )
 
         inference = []
@@ -225,7 +232,7 @@ class TrainModel:
                     )
                     .detach()
                     .cpu()
-                    .tolist()
+                    .tolist()[:max_new_tokens]
                 )
 
         self._inference_dataset = ListDataset(inference)
@@ -242,20 +249,33 @@ class TrainModel:
             self._metrics["cover_ratio"],
         )
 
-    def ndcg(self, at_k = None) -> float:
-        if at_k is None:
+    def pad(
+        self, data: list[list[int]], pad_value: int, right_pad_margin: int
+    ) -> list[list[int]]:
+        """pad or truncate list with pad_value to right_pad_margin"""
+
+        for lst in data:
+            if len(lst) <= right_pad_margin:
+                yield lst + [pad_value] * (right_pad_margin - len(lst))
+            else:
+                yield lst[:right_pad_margin]
+
+    def ndcg(self, at_k=None) -> float:
+        if at_k is None or at_k > self._at_k:
             at_k = self._at_k
 
         score = 1 * (
-            torch.tensor(self._datasets._test_interactions, dtype=torch.float32)
-            == torch.tensor(self._inference_dataset.data, dtype=torch.float32)
+            np.array(
+                list(self.pad(self._datasets._test_interactions, -1, at_k)), dtype=int
+            )
+            == np.array(
+                list(self.pad(self._inference_dataset.data, -1, at_k)), dtype=int
+            )
         )
-        y_score = score.clone()
-        score.sort(dim=1)
-        y_true = torch.fliplr(score)
-        self._metrics[f"ndcg@{at_k}"] = ndcg_score(
-            y_true.numpy(), y_score.numpy(), k=at_k
-        ).item()
+        y_score = score.copy()
+        score.sort(axis=1)
+        y_true = np.fliplr(score)
+        self._metrics[f"ndcg@{at_k}"] = ndcg_score(y_true, y_score, k=at_k).item()
         return self._metrics[f"ndcg@{at_k}"]
 
     def save(self, path: str = "./saved"):
