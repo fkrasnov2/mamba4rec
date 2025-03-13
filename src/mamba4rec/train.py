@@ -232,7 +232,7 @@ class TrainModel:
                     )
                     .detach()
                     .cpu()
-                    .tolist()[:max_new_tokens]
+                    .tolist()
                 )
 
         self._inference_dataset = ListDataset(inference)
