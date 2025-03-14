@@ -13,7 +13,7 @@ from transformers.generation.configuration_utils import GenerationConfig
 
 
 class ListDataset(torch.utils.data.Dataset):
-    def __init__(self, data: list[list]):
+    def __init__(self, data: list[list[int]]):
         self.data = data
 
     def __len__(self):
@@ -124,18 +124,23 @@ class Datasets:
         self._train_dataset = ListDataset(X_train)
         self._eval_dataset = ListDataset(X_eval)
 
+    @property
     def train_dataset(self) -> ListDataset:
         return self._train_dataset
 
+    @property
     def eval_dataset(self) -> ListDataset:
         return self._eval_dataset
 
+    @property
     def test_interactions(self) -> list[list[int]]:
         return self._test_interactions
 
+    @property
     def train_interactions(self) -> list[list[int]]:
         return self._train_interactions
 
+    @property
     def leave_k_out(self) -> int:
         return self._leave_k_out
 
@@ -190,7 +195,6 @@ class TrainModel:
             save_total_limit=11,
             save_safetensors=False,
         )
-
         self._trainer = Trainer(
             model=self._model,
             args=training_args,
