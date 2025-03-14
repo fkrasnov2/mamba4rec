@@ -1,6 +1,6 @@
 [project]
 name = "mamba4rec"
-version = "0.1.0"
+version = "0.1.1"
 description = "Mamba model for recommendations of search suggests"
 license = {file = "LICENSE"}
 
