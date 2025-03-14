@@ -8,8 +8,7 @@ from sklearn.model_selection import train_test_split
 from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-from transformers import (MambaConfig, MambaForCausalLM, Trainer,
-                          TrainingArguments)
+from transformers import MambaConfig, MambaForCausalLM, Trainer, TrainingArguments
 from transformers.generation.configuration_utils import GenerationConfig
 
 
@@ -106,13 +105,16 @@ class Vocab:
 
 
 class Datasets:
-    def __init__(self, train_interactions: list[list], test_interactions: list[list]):
+    def __init__(
+        self, train_interactions: list[list[int]], test_interactions: list[list[int]]
+    ):
         self._train_interactions = train_interactions
         self._test_interactions = test_interactions
+        self._leave_k_out = len(test_interactions[0])
 
         (
             X_train,
-            X_test,
+            X_eval,
         ) = train_test_split(
             train_interactions,
             test_size=0.05,
@@ -120,15 +122,22 @@ class Datasets:
         )
 
         self._train_dataset = ListDataset(X_train)
-        self._eval_dataset = ListDataset(X_test)
+        self._eval_dataset = ListDataset(X_eval)
 
-    @property
     def train_dataset(self) -> ListDataset:
         return self._train_dataset
 
-    @property
     def eval_dataset(self) -> ListDataset:
         return self._eval_dataset
+
+    def test_interactions(self) -> list[list[int]]:
+        return self._test_interactions
+
+    def train_interactions(self) -> list[list[int]]:
+        return self._train_interactions
+
+    def leave_k_out(self) -> int:
+        return self._leave_k_out
 
 
 class TrainModel:
@@ -196,9 +205,10 @@ class TrainModel:
         self, max_new_tokens=None, dataset=None, batch_size: int = 512
     ) -> tuple[ListDataset, int, float]:
         if dataset is None:
-            dataset = ListDataset(self._datasets._test_interactions)
-            if max_new_tokens is None:
-                max_new_tokens = len(dataset.data[0])
+            dataset = ListDataset(self._datasets.train_interactions)
+        if max_new_tokens is None:
+            max_new_tokens = self._datasets.leave_k_out
+
         self._at_k = max_new_tokens
 
         self._gconf = GenerationConfig(
@@ -266,7 +276,7 @@ class TrainModel:
 
         score = 1 * (
             np.array(
-                list(self.pad(self._datasets._test_interactions, -1, at_k)), dtype=int
+                list(self.pad(self._datasets.train_interactions, -1, at_k)), dtype=int
             )
             == np.array(
                 list(self.pad(self._inference_dataset.data, -1, at_k)), dtype=int
