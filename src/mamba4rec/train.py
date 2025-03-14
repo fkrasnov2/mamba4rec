@@ -238,15 +238,19 @@ class TrainModel:
         )
         with torch.no_grad():
             for batch in tqdm(dataloader):
-                inference += (
-                    self._model.generate(
-                        batch["input_ids"].to(self._device),
-                        attention_mask=batch["attention_mask"].to(self._device),
-                        generation_config=self._gconf,
+                inference += list(
+                    filter(
+                        lambda el: el != self._vocab.pad_id
+                        and el != self._vocab.unk_id,
+                        self._model.generate(
+                            batch["input_ids"].to(self._device),
+                            attention_mask=batch["attention_mask"].to(self._device),
+                            generation_config=self._gconf,
+                        )
+                        .detach()
+                        .cpu()
+                        .tolist(),
                     )
-                    .detach()
-                    .cpu()
-                    .tolist()
                 )
 
         self._inference_dataset = ListDataset(inference)
