@@ -238,20 +238,23 @@ class TrainModel:
         )
         with torch.no_grad():
             for batch in tqdm(dataloader):
-                inference += list(
-                    filter(
-                        lambda el: el != self._vocab.pad_id
-                        and el != self._vocab.unk_id,
-                        self._model.generate(
-                            batch["input_ids"].to(self._device),
-                            attention_mask=batch["attention_mask"].to(self._device),
-                            generation_config=self._gconf,
-                        )
-                        .detach()
-                        .cpu()
-                        .tolist(),
+                batch_inference = (
+                    self._model.generate(
+                        batch["input_ids"].to(self._device),
+                        attention_mask=batch["attention_mask"].to(self._device),
+                        generation_config=self._gconf,
                     )
+                    .detach()
+                    .cpu()
+                    .tolist()
                 )
+
+                for lst in batch_inference:
+                    lst2 = []
+                    for el in lst:
+                        if el != self._vocab.pad_id and el != self._vocab.unk_id:
+                            lst2.append(el)
+                    inference.append(lst2)
 
         self._inference_dataset = ListDataset(inference)
         self._metrics["distinct_inference_size"] = (
@@ -284,10 +287,16 @@ class TrainModel:
 
         score = 1 * (
             np.array(
-                list(self.pad(self._datasets.train_interactions, -1, at_k)), dtype=int
+                list(
+                    self.pad(
+                        self._datasets.train_interactions, self._vocab.pad_id, at_k
+                    )
+                ),
+                dtype=int,
             )
             == np.array(
-                list(self.pad(self._inference_dataset.data, -1, at_k)), dtype=int
+                list(self.pad(self._inference_dataset.data, self._vocab.pad_id, at_k)),
+                dtype=int,
             )
         )
         y_score = score.copy()
