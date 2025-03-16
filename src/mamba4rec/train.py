@@ -289,7 +289,7 @@ class TrainModel:
             np.array(
                 list(
                     self.pad(
-                        self._datasets.train_interactions, self._vocab.pad_id, at_k
+                        self._datasets.test_interactions, self._vocab.pad_id, at_k
                     )
                 ),
                 dtype=int,
