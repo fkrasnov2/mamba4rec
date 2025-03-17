@@ -9,15 +9,15 @@ import dill
 
 
 class s3_tools:
-    def __init__(
-        self,
-    ):
+    def __init__(self, **creds):
         config = Config(signature_version="s3v4")
         self._s3_client = boto3.client(
             "s3",
-            endpoint_url=os.environ.get("S3_URL"),
-            aws_access_key_id=os.environ.get("S3_ACCESS_KEY"),
-            aws_secret_access_key=os.environ.get("S3_SECRET"),
+            endpoint_url=os.environ.get("S3_URL", creds.get("S3_URL")),
+            aws_access_key_id=os.environ.get(
+                "S3_ACCESS_KEY", creds.get("S3_ACCESS_KEY")
+            ),
+            aws_secret_access_key=os.environ.get("S3_SECRET", creds.get("S3_SECRET")),
             aws_session_token="session_token",
             config=config,
             region_name="us-east-1",
