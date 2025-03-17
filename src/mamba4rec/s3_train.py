@@ -1,8 +1,6 @@
 import argparse
 
-import mamba4rec
-from mamba4rec import Datasets, TrainModel
-from s3_tools import s3_tools
+from mamba4rec import Datasets, TrainModel, Vocab, s3_tools
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -35,7 +33,7 @@ if __name__ == "__main__":
     data_dict = s3.get_dill_object(
         bucket_name=args.bucket_name, key_name=args.data_key_name
     )
-    vocab = mamba4rec.Vocab(data_dict.get("search_texts", {}))
+    vocab = Vocab(data_dict.get("search_texts", {}))
     datasets = Datasets(
         data_dict.get("train_interactions", []),
         data_dict.get("test_interactions", []),
