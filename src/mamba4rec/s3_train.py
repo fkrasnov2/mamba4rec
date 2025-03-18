@@ -1,24 +1,26 @@
 import argparse
 
-from mamba4rec import Datasets, TrainModel, Vocab, s3_tools
+from mamba4rec import Datasets, TrainModel, Vocab, ListDataset, s3_tools
 
 
 class Pipeline(s3_tools):
     def __init__(self, **creds):
         super().__init__(**creds)
+        self._vocab : [Vocab|None] = None
+        self._inference : [ListDataset|None] = None
 
     def load(self, bucket_name, data_key_name) -> dict:
         return self.get_dill_object(bucket_name=bucket_name, key_name=data_key_name)
 
     def train(self, data_dict: dict):
-        vocab = Vocab(data_dict.get("search_texts", {}))
+        self._vocab = Vocab(data_dict.get("search_texts", {}))
         datasets = Datasets(
             data_dict.get("train_interactions", []),
             data_dict.get("test_interactions", []),
         )
-        model_trainer = TrainModel(vocab, datasets)
+        model_trainer = TrainModel(self._vocab, datasets)
 
-        model_trainer.generate()
+        self._inference, _, _ = model_trainer.generate()
         model_trainer.ndcg()
         model_trainer.save("./saved")
 
@@ -30,6 +32,14 @@ class Pipeline(s3_tools):
             bucket_name=bucket_name,
             object_name=model_folder_name.strip("/") + "/",
         )
+
+    @property
+    def vocab(self) -> Vocab:
+        return self._vocab
+
+    @property
+    def inference(self) -> ListDataset:
+        return self._inference
 
     def parse(self):
         parser = argparse.ArgumentParser()
