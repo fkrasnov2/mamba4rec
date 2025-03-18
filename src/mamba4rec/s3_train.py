@@ -4,8 +4,8 @@ from mamba4rec import Datasets, TrainModel, Vocab, s3_tools
 
 
 class Pipeline(s3_tools):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, **creds):
+        super().__init__(**creds)
 
     def load(self, bucket_name, data_key_name) -> dict:
         return self.get_dill_object(bucket_name=bucket_name, key_name=data_key_name)
