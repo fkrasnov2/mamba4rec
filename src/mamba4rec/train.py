@@ -213,8 +213,6 @@ class TrainModel:
         if max_new_tokens is None:
             max_new_tokens = self._datasets.leave_k_out
 
-        self._at_k = max_new_tokens
-
         self._gconf = GenerationConfig(
             max_new_tokens=max_new_tokens,
             num_beams=4,
@@ -282,15 +280,13 @@ class TrainModel:
                 yield lst[:right_pad_margin]
 
     def ndcg(self, at_k=None) -> float:
-        if at_k is None or at_k > self._at_k:
-            at_k = self._at_k
+        if at_k is None or at_k > self._datasets.leave_k_out:
+            at_k = self._datasets.leave_k_out
 
         score = 1 * (
             np.array(
                 list(
-                    self.pad(
-                        self._datasets.test_interactions, self._vocab.pad_id, at_k
-                    )
+                    self.pad(self._datasets.test_interactions, self._vocab.pad_id, at_k)
                 ),
                 dtype=int,
             )
