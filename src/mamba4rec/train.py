@@ -206,24 +206,24 @@ class TrainModel:
         self._trainer.train()
 
     def generate(
-        self, max_new_tokens=None, dataset=None, batch_size: int = 512
+        self, min_new_tokens=None, dataset=None, batch_size: int = 512
     ) -> tuple[ListDataset, int, float]:
         if dataset is None:
             dataset = ListDataset(self._datasets.train_interactions)
-        if max_new_tokens is None:
-            max_new_tokens = self._datasets.leave_k_out
+        if min_new_tokens is None:
+            min_new_tokens = self._datasets.leave_k_out
 
         self._gconf = GenerationConfig(
-            max_new_tokens=max_new_tokens,
-            num_beams=4,
+            min_new_tokens = min_new_tokens, 
+            num_beams=2,
             do_sample=True,
+            use_cache=True,
+            cache_implementation="mamba",
             pad_token_id=self._vocab.pad_id,
-            early_stopping="never",
+            early_stopping=False,
             bad_words_ids=[
-                [
-                    self._vocab.pad_id,
-                    self._vocab.unk_id,
-                ]
+                [ self._vocab.pad_id, ],
+                [ self._vocab.unk_id, ]
             ],
         )
 

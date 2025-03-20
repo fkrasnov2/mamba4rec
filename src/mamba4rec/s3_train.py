@@ -12,7 +12,7 @@ class Pipeline(s3_tools):
     def load(self, bucket_name, data_key_name) -> dict:
         return self.get_dill_object(bucket_name=bucket_name, key_name=data_key_name)
 
-    def train(self, data_dict: dict, max_new_tokens: int = 14, at_k: int = 5):
+    def train(self, data_dict: dict, min_new_tokens: int = 14, at_k: int = 5):
         self._vocab = Vocab(data_dict.get("search_texts", {}))
         datasets = Datasets(
             data_dict.get("train_interactions", []),
@@ -20,7 +20,7 @@ class Pipeline(s3_tools):
         )
         model_trainer = TrainModel(self._vocab, datasets)
 
-        self._inference, _, _ = model_trainer.generate(max_new_tokens=max_new_tokens)
+        self._inference, _, _ = model_trainer.generate(  min_new_tokens= min_new_tokens) 
         model_trainer.ndcg(at_k)
         model_trainer.save("./saved")
 
