@@ -2,7 +2,6 @@
 name = "mamba4rec"
 version = "0.1.8"
 description = "Mamba model for recommendations of search suggests"
-license = {file = "LICENSE"}
 
 authors = [
     {name="Fedor Krasnov", email="krasnov.fedor2@wb.ru"},
