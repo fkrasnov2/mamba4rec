@@ -47,8 +47,8 @@ test: .test
 
 build: 
 	rm -f dist/*
-	. .venv/bin/activate && python -m build .
-	. .venv/bin/activate && twine upload dist/mamba4rec*
+	. .venv/bin/activate && pip install build && python -m build .
+	. .venv/bin/activate && pip install twine && twine upload dist/mamba4rec*
 
 # Cleaning
 

@@ -215,12 +215,12 @@ class TrainModel:
 
         self._gconf = GenerationConfig(
             min_new_tokens = min_new_tokens, 
-            num_beams=2,
+            num_beams=4,
             do_sample=True,
             use_cache=True,
             cache_implementation="mamba",
             pad_token_id=self._vocab.pad_id,
-            early_stopping=False,
+            early_stopping="never",
             bad_words_ids=[
                 [ self._vocab.pad_id, ],
                 [ self._vocab.unk_id, ]
