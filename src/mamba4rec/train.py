@@ -286,12 +286,12 @@ class TrainModel:
         score = 1 * (
             np.array(
                 list(
-                    self.pad(self._datasets.test_interactions, self._vocab.pad_id, at_k)
+                    self.pad(self._datasets.test_interactions, -1, at_k)
                 ),
                 dtype=int,
             )
             == np.array(
-                list(self.pad(self._inference_dataset.data, self._vocab.pad_id, at_k)),
+                list(self.pad(self._inference_dataset.data, -2, at_k)),
                 dtype=int,
             )
         )
